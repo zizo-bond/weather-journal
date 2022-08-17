@@ -1,116 +1,74 @@
-// Define the web site that provides informatios about weather
-const baseURI = "https://api.openweathermap.org/data/2.5/weather?zip=";
-const requestForm = "https://api.openweathermap.org/data/2.5/weather?zip={zip code},{country code}&appid={API key}";
 
-//define personal API key
-const key = "&appid=036b6ffc6f93a9f7fd34f524747fd8f5&units=imperial";
+/* Global Variables */
+// Define the web site that provides informations about weather
+let baseURL = 'http://api.openweathermap.org/data/2.5/weather?zip='
+//my personal API Key
+const apiKey = '&units=metric&appid=036b6ffc6f93a9f7fd34f524747fd8f5';
 
-//define variables
-const generate = document.querySelector("#generate");
-const zip = document.getElementById('zip');
-const feelings = document.getElementById('feelings');
-const temp = document.getElementById('temp');
-const content = document.getElementById('content');
-const date = document.getElementById('date');
-const city = document.getElementById('city');
-// Create a new date dynamically with JS
+// Create a new date instance dynamically with JS
 let d = new Date();
-let newDate = d.toDateString();
+let newDate = d.getMonth()+1+'.'+ d.getDate()+'.'+ d.getFullYear();
+//events
+// on generate button ,add event listner
+document.getElementById('generate').addEventListener('click', ()=> {
 
-
-
-// event*
-//event listener on generate button
-generate.addEventListener("click", (event)=>{
-    event.preventDefault();
-    const madeURL = `${baseURI}${zip.value},${country.value}${key}`;
-    //fetch the url and get the data the needs to be sliced
-    getData(madeURL).
-    then((data)=>{
-    //get the info we want from the coming data of the weather
-    projectData(data).
-    then((info)=>{
-    //post the data to a url : "/add" 
-    postData("/add", info).
-    then((data)=>{
-    //retrieve the data sent to the server from "/add" post 
-        retrieveData("/all").
-        then(data=>{
-    //  update the UI
-        updateUI(data);
-        });
-    });
-    });
-    
-    });
+    const userZip = document.getElementById('zip').value;
+   
+    const feeling = document.getElementById('feelings').value;
+   
+   //api call
+   getWeather(baseURL, userZip, apiKey)
+   //chain promises
+   .then((data)=>{
+       //postWeather method to send to the server
+       postWeather('/add', {temp: data, date: newDate, feeling: feeling})
+   })
+   //calling update UI
+   .then(()=>updateUI());
 });
 
-//postData method to send to the server
-const postData = async (url='', data={})=>{
-    const response = await fetch(url, {
-        method: 'POST',
-        credentials:"same-origin",
-        headers: {
-            'Content-Type': 'application/json'
-          },
-        body: JSON.stringify(data)
-    });
-    try {
-        const result = await response.json();
-        return result;
-    }catch (err) {
-        console.error(error);
-    }
-};
-
 //api call method
-const getData = async (url) =>{
-    try {   
-           const response = await fetch(url);
-            const result = await response.json();
-            if(result.cod != 200){
-                return result;
-                
-            }
-            return result;
-        }catch(e) {
-        console.log(e.message);
-    }
-};
-
-const projectData = async(data)=>{
+const getWeather = async (baseURL, userZip, Key) => {
+    //call the api with the url and wait response
+    const res = await fetch(`${baseURL + userZip}${Key}`)
     try{
-        if(data.cod != 200){
-            return data;
-        }
-        
-            const info = {
-                date: newDate,
-                temp: Math.round(data.main.temp),
-                content: feelings.value,
-                city: data.name,
-                weather: data.weather[0].description,
-                country: data.sys.country,
-             };
-             return info;
-        
-    }catch(e){
-        console.log(e);
+        //wait response and convert to 'json'
+        const receivedData = await res.json();
+        const temp = receivedData.main.temp;
+        const name = receivedData.name;
+      //  console.log(temp); //test
+        return({temp: temp, name: receivedData.name}) //return temp and city name
     }
-};
+    //catch errors
+    catch(error){
+        console.log("error",error);
+        // appropriately handle the error
+    }
+}
 
-  
-const retrieveData = async (url) => {
-   const response = await fetch(url);
-   try{
-       const result = await response.json();
-       return result;
-   }catch (err) {
-       console.error(err);
-   }
-};
+//postWeather method to send to the server
+const postWeather = async (url = '', data = {})=>{
+    const res = await fetch(url, {
+        method : 'POST',
+        credentials : 'same-origin',
+        headers : {
+            'Content-Type': 'application/json',
+        },
+        body : JSON.stringify(data),
+    });
+    try{
+        const returnedData = await res.json();
+        console.log("data returned by postWeather"); //test
+        console.log(returnedData); //test
+        return(returnedData);
+    }
+    catch(error){
+        console.log("error", error);
+        // appropriately handle the error
+    }
+}
 
-//updating the ui after receving response from the server
+//update the ui after getting response from the server
 const updateUI = async ()=> {
   // console.log("updateUI"); //test
     // wait response from the server get route
@@ -127,10 +85,7 @@ const updateUI = async ()=> {
     }
     catch(error){
         console.log("error", error);
-        // appropriately handle the error
+        //  handle the error appropriately
     }
 }
- //loading the page smoothly
-setTimeout(() =>{
-    document.querySelector("body").style.opacity = '1';
-  },200);
+
