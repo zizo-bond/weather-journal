@@ -6,14 +6,15 @@ const express = require("express");
 // Start up an instance of app
 const app = express();
 
+/* Dependencies */
+const bodyParser = require("body-parser");
 
 /* Middleware*/
 // configuring express to use body-parser as middle-ware.
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-/* Dependencies */
-const bodyParser = require("body-parser");
+
 
 //cors for cross origin allowance
 const cors = require("cors");
