@@ -1,42 +1,55 @@
-//require express framework
-const express = require('express');
-//initiate an app instance from express
+// Setup empty JS object to act as endpoint for all routes
+const projectData = {};
+
+// Require Express to run server and routes
+const express = require("express");
+// Start up an instance of app
 const app = express();
 
-//setup the port
-const port = 3000;
 
-// Setup empty JS object to act as endpoint for every route
-let projectData = {};
+/* Middleware*/
+// configuring express to use body-parser as middle-ware.
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
-//configuring express to use body-parser as middle-ware.
-app.use(express.json());//parse the json format to normal string;
-app.use(express.urlencoded({ extended: false }));//is a body parser for html post form
+/* Dependencies */
+const bodyParser = require("body-parser");
 
-// Initialize the main project folder
-app.use(express.static("website"));
-
-//setup cors module to enable server to listen to other requests.
-const cors = require('cors');
-//use the cors middleware
+//cors for cross origin allowance
+const cors = require("cors");
+const { json } = require("body-parser");
 app.use(cors());
 
-// post route
-app.post('/add', async (req, res) => {
-    const info = await req.body;
-    projectData = info;
-    res.send(projectData);
-});
+// Initialize the main project folder
+app.use(express.static('website'));
 
+// Setup Server
+const port = 5000;
 
-app.get("/all", async (req, res) => {
-    if(projectData){
-        res.send(projectData);
-    }
-});
+const server = app.listen(port, () => {
+    console.log(`runnning on local host: ${port}`);
+  });
 
+//Get Route
+app.get('/all', (req, res)=> {
+   // console.log("get Route"); // test
+    //convert data stored in projectData to json
+    const weather = JSON.stringify(projectData);
+    //send the converted data
+    res.send(weather);
+    console.log("data from get route");
+    console.log(weather);
+})
 
-//listening for the server 
-app.listen(port, _=> console.log(`listening on port ${port}`));
+//Post Route
+app.post('/add', (req, res)=> {
+    //store received data in projectData
+    projectData.temp = req.body.temp;
+    projectData.date = req.body.date;
+    projectData.feeling = req.body.feeling;
+    projectData.name = req.body.name;
+  res.send(projectData);
+  console.log("Received");
+})
 
 
